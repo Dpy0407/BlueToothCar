@@ -209,24 +209,19 @@ public class MainActivity extends Activity {
                 } else if (connectingStatus == BluetoothConnectingStatus.STATUS_CONNECTING) {
                     // TODO: stop connecting
                 } else {
-                    if (adapter.getCount() == 0) {
-                        if (!bluetoothAdapter.isEnabled()) {
-                            Toast.makeText(MainActivity.this, "请打开蓝牙开关", Toast.LENGTH_SHORT).show();
-                        } else {
-                            Set<BluetoothDevice> pairedDevices = bluetoothAdapter.getBondedDevices();
-                            if (pairedDevices.size() > 0) {
-                                adapter.clear();
-                                for (BluetoothDevice device : pairedDevices) {
-                                    adapter.add(device.getAddress());
-                                }
-                            } else {
-                                Toast.makeText(MainActivity.this, "未发现匹配的设备", Toast.LENGTH_SHORT).show();
+                    if (!bluetoothAdapter.isEnabled() || !bluetoothSwitch.isChecked()) {
+                        Toast.makeText(MainActivity.this, "请打开蓝牙开关", Toast.LENGTH_SHORT).show();
+                    } else {
+                        Set<BluetoothDevice> pairedDevices = bluetoothAdapter.getBondedDevices();
+                        if (pairedDevices.size() > 0) {
+                            adapter.clear();
+                            for (BluetoothDevice device : pairedDevices) {
+                                adapter.add(device.getAddress());
                             }
+                            blueToothDialog.show();
+                        } else {
+                            Toast.makeText(MainActivity.this, "未发现匹配的设备", Toast.LENGTH_SHORT).show();
                         }
-                    }
-
-                    if (adapter.getCount() > 0) {
-                        blueToothDialog.show();
                     }
                 }
             }
