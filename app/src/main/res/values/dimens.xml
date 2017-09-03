@@ -1,0 +1,16 @@
+<resources>
+    <!-- Default screen margins, per the Android Design guidelines. -->
+    <dimen name="activity_horizontal_margin">16dp</dimen>
+    <dimen name="activity_vertical_margin">16dp</dimen>
+
+    <dimen name="button_stop_width">120dp</dimen>
+    <dimen name="button_stop_height">120dp</dimen>
+
+    <dimen name="button_orientation_length">70dp</dimen>
+
+    <dimen name="button_turn_x">80dp</dimen>
+    <dimen name="button_turn_y">80dp</dimen>
+
+    <dimen name="button_bluetooth_x">60dp</dimen>
+    <dimen name="button_bluetooth_y">40dp</dimen>
+</resources>

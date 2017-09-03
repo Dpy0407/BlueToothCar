@@ -1,0 +1,137 @@
+private class ConnectThread extends Thread {
+        private BluetoothSocket mmsocket;
+        private BluetoothDevice mmdevice;
+
+        public ConnectThread(BluetoothDevice device) {
+            mmdevice = device;
+            BluetoothSocket tmp = null;
+            try {
+                tmp = mmdevice.createRfcommSocketToServiceRecord(UUID.fromString("00001101-0000-1000-8000-00805F9B34FB"));
+            } catch (IOException e) {
+
+            }
+            mmsocket = tmp;
+        }
+
+        public void run() {
+            bluetoothAdapter.cancelDiscovery();    //取消设备查找
+
+            Message toMain = myHandler.obtainMessage();
+            toMain.what = msgShowConnect;
+            try {
+                mmsocket.connect();
+                toMain.obj = "连接成功";
+                myHandler.sendMessage(toMain);
+                booleanConnect = true;
+                Log.e("run", "booleanConnect = true");
+            } catch (IOException e) {
+                try {
+                    mmsocket.close();
+                } catch (IOException e1) {
+
+                }
+                //连接失败
+                toMain.obj = "连接失败";
+                myHandler.sendMessage(toMain);
+                booleanConnect = false;
+                Log.e("run", "booleanConnect = false");
+                return;
+            }
+
+            //新建一个数据交换线程
+            connectedThread = new ConnectedThread(mmsocket);
+            connectedThread.start();
+
+            return;
+        }
+
+        public void cancel() {
+            try {
+                mmsocket.close();
+            } catch (IOException e) {
+
+            }
+        }
+    }
+
+
+    private class ConnectedThread extends Thread {
+        private BluetoothSocket mmsocket;
+        private InputStream inStream;
+        private OutputStream outStream;
+
+        public ConnectedThread(BluetoothSocket socket) {
+
+            mmsocket = socket;
+            try {
+                //获得输入输出流
+                inStream = mmsocket.getInputStream();
+                outStream = mmsocket.getOutputStream();
+            } catch (IOException e) {
+                Log.e("ConnectedThread", "dd" );
+                Log.e("ConnectedThread", e.getMessage() );
+            }
+        }
+
+        public void run() {
+            boolean start = false;
+            String strMsg = null;
+            int len = 0;
+            //读数据需不断监听，写不需要
+            while (true) {
+                try {
+                    byte[] buff = new byte[1];
+                    len = inStream.read(buff);
+                    //把读取到的数据发送给UI进行显示
+                    String strBuffer = new String(buff);
+
+                    if(strBuffer.equals("$"))
+                    {
+                        start = true;
+                        strMsg = "";
+                    }
+
+                    if (start == true)
+                    {
+                        strMsg+=strBuffer;
+                    }
+                    if(strBuffer.equals("#"))
+                    {
+                        start = false;
+                        Message toMain = myHandler.obtainMessage();
+                        toMain.obj = strMsg;
+                        toMain.what = msgReceiveData;
+                        myHandler.sendMessage(toMain);
+                    }
+                    buff = null;
+
+                } catch (IOException e) {
+                    Log.e("ConnectedThread", "write" );
+                    Log.e("ConnectedThread", e.getMessage() );
+                    break;
+                }
+            }
+        }
+
+        public void write(byte[] buffer) {
+
+            try {
+                outStream.write(buffer);
+            } catch (IOException e) {
+                Log.e("write", "write error！");
+                Message toMain = myHandler.obtainMessage();
+                toMain.obj = "蓝牙设备已经断开，请重新尝试连接！";
+                toMain.what = msgShowConnect;
+                myHandler.sendMessage(toMain);
+            }
+        }
+
+        public void cancel() {
+            try {
+                mmsocket.close();
+            } catch (IOException e) {
+                Log.e("ConnectedThread", "cancle" );
+                Log.e("ConnectedThread", e.getMessage() );
+            }
+        }
+    }
